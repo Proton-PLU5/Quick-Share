@@ -1,8 +1,6 @@
 package me.mathewcibi.quickshare.utils;
 
-import java.io.BufferedInputStream;
-import java.io.DataInputStream;
-import java.io.IOException;
+import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 
@@ -11,6 +9,9 @@ public class NetworkServer {
     private DataInputStream inputStream;
     private static final int PORT = 8080;
     public static final String STOP_STRING = "##STOP##";
+
+    private String fileName = "";
+    private byte[] fileData;
 
     public NetworkServer() {
         try {
@@ -35,14 +36,20 @@ public class NetworkServer {
     }
 
     private void readInputStream() {
-        String line = "";
-        while (!line.equals(STOP_STRING)) {
-            try {
-                line = inputStream.readUTF();
-                System.out.println(line);
-            } catch (Exception e) {
-                e.printStackTrace();
+        try {
+            while (true) {
+                String fileName = inputStream.readUTF();
+                System.out.println("Received: " + fileName);
+                int length = inputStream.readInt();
+                byte[] data = new byte[length];
+                inputStream.readFully(data, 0, data.length);
+                File output = new File(fileName);
+                FileOutputStream fileOutputStream = new FileOutputStream(output);
+                fileOutputStream.write(data);
+                fileOutputStream.close();
             }
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 }

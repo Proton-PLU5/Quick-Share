@@ -5,6 +5,8 @@ module me.mathewcibi.quickshare {
     requires jdk.dynalink;
     requires java.desktop;
     requires jdk.xml.dom;
+    requires jdk.compiler;
+    requires org.apache.commons.io;
 
     exports me.mathewcibi.quickshare;
 }

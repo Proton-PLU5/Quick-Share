@@ -1,11 +1,9 @@
 package me.mathewcibi.quickshare.scenes;
 
-import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.scene.Group;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
-import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.effect.BlurType;
 import javafx.scene.effect.DropShadow;
@@ -21,20 +19,15 @@ import javafx.scene.shape.Line;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
 import javafx.scene.text.TextAlignment;
-import me.mathewcibi.quickshare.utils.NetworkClient;
+import javafx.stage.Stage;
 
 import java.io.IOException;
 import java.net.InetAddress;
-import java.util.LinkedList;
-import java.util.Queue;
 
-public class MainScene extends Scene {
+public class ReceiverScene extends Scene {
     private String IP = "";
-    public static final Queue<String> messagesToSend = new LinkedList<>();
-    private Thread serverThread;
-    private Thread clientThread;
 
-    public MainScene(Group root) {
+    public ReceiverScene(Group root) {
         super(root);
         this.setFill(Color.TRANSPARENT);
         this.getStylesheets().add(this.getClass().getResource("/me/mathewcibi/quickshare/stylesheets/textarea.css").toExternalForm());
@@ -91,6 +84,12 @@ public class MainScene extends Scene {
         connectionTypeLine.setStrokeWidth(3);
         connectionTypeLine.setStroke(Color.web("9D9D9D"));
 
+        Label orLabel = new Label("OR");
+        orLabel.setFont(Font.loadFont(this.getClass().getResourceAsStream("/me/mathewcibi/quickshare/fonts/Inter-SemiBold.ttf"), 24));
+        orLabel.setTextFill(Color.web("6D5D5D"));
+        orLabel.setLayoutX(466);
+        orLabel.setLayoutY(346);
+
         // Receiver and Sender Buttons
         DropShadow dropShadow = new DropShadow();
         InnerShadow innerShadow = new InnerShadow();
@@ -120,6 +119,10 @@ public class MainScene extends Scene {
         receiverStack.setLayoutX(126);
         receiverStack.setLayoutY(304);
 
+        receiverStack.setOnMouseClicked(event -> {
+            System.out.println("Receiver Button Clicked");
+        });
+
         Rectangle senderButton = new Rectangle(291, 111, Color.web("004BC3"));
         senderButton.setArcHeight(10);
         senderButton.setArcWidth(10);
@@ -135,16 +138,7 @@ public class MainScene extends Scene {
 
         senderStack.setOnMouseClicked(event -> {
             System.out.println("Sender Button Clicked");
-            clientThread = new Thread(() -> {
-                try {
-                    System.out.println("Client Started with IP: " + IP);
-                    new NetworkClient(IP);
-
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            });
-            clientThread.start();
+            ((Stage) this.getWindow()).setScene(new SenderScene(new Group()));
         });
 
         /// IP INPUT
@@ -167,32 +161,6 @@ public class MainScene extends Scene {
             IP = newValue;
         });
 
-        /// Communication Log
-        Rectangle communicationLogBackground = new Rectangle(757, 223, Color.web("D9D9D9"));
-        communicationLogBackground.setArcHeight(10);
-        communicationLogBackground.setArcWidth(10);
-        communicationLogBackground.setLayoutX(102);
-        communicationLogBackground.setLayoutY(490);
-
-        Label communicationLogTitleLabel = new Label("COMMUNICATION LOG");
-        communicationLogTitleLabel.setFont(Font.loadFont(this.getClass().getResourceAsStream("/me/mathewcibi/quickshare/fonts/Inter-SemiBold.ttf"), 24));
-        communicationLogTitleLabel.setTextFill(Color.web("6D5D5D"));
-        communicationLogTitleLabel.setLayoutX(126);
-        communicationLogTitleLabel.setLayoutY(496);
-
-        Line communicationLogLine = new Line(103, 528, 103+755, 528);
-        communicationLogLine.setStrokeWidth(3);
-        communicationLogLine.setStroke(Color.web("9D9D9D"));
-
-        TextArea communicationLog = new TextArea();
-        communicationLog.setFont(Font.loadFont(this.getClass().getResourceAsStream("/me/mathewcibi/quickshare/fonts/Inter-SemiBold.ttf"), 16));
-        communicationLog.setLayoutX(126);
-        communicationLog.setLayoutY(535);
-        communicationLog.setPrefSize(713, 133);
-        communicationLog.setWrapText(true);
-        communicationLog.setMaxSize(713, 133);
-        communicationLog.setEditable(false);
-
         // Device IP
         String ip = "ERROR GETTING IP";
         try {
@@ -206,66 +174,6 @@ public class MainScene extends Scene {
         deviceIPLabel.setLayoutX(10);
         deviceIPLabel.setLayoutY(732);
         deviceIPLabel.setFont(Font.loadFont(this.getClass().getResourceAsStream("/me/mathewcibi/quickshare/fonts/Inter-SemiBold.ttf"), 24));
-
-        /// Message Bar
-        Rectangle messageBarBackground = new Rectangle(758, 32, Color.web("383A40"));
-        messageBarBackground.setLayoutX(102);
-        messageBarBackground.setLayoutY(681);
-        messageBarBackground.setArcWidth(10);
-        messageBarBackground.setArcHeight(10);
-        messageBarBackground.setEffect(dropShadow);
-
-        TextField messageBar = new TextField();
-        messageBar.setPrefSize(685,32);
-        messageBar.setFont(Font.loadFont(this.getClass().getResourceAsStream("/me/mathewcibi/quickshare/fonts/Inter-SemiBold.ttf"), 16));
-        messageBar.setStyle("-fx-text-fill: #9EA4B5;");
-        messageBar.setPromptText("Type a message...");
-        messageBar.setLayoutX(135);
-        messageBar.setLayoutY(681);
-        messageBar.setBackground(Background.EMPTY);
-
-        ImageView sendButton = new ImageView(this.getClass().getResource("/me/mathewcibi/quickshare/images/send.png").toExternalForm());
-        sendButton.setFitHeight(25+25*0.322265625);
-        sendButton.setFitWidth(30+25*0.322265625);
-        sendButton.setLayoutX(828-5);
-        sendButton.setLayoutY(684);
-        sendButton.setOnMouseClicked(event -> {
-            String message = messageBar.getText();
-            if (!message.isEmpty()) {
-                synchronized (messagesToSend) {
-                    messagesToSend.add(message);
-                    messagesToSend.notify();
-                }
-                communicationLog.appendText("You: " + message + "\n");
-                messageBar.clear();
-            }
-        });
-
-        receiverStack.setOnMouseClicked(event -> {
-            System.out.println("Receiver Button Clicked");
-            serverThread = new Thread(() -> {
-                try {
-                    System.out.println("Server Started");
-                    // new NetworkServer(communicationLog);
-
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            });
-            serverThread.start();
-        });
-
-        Platform.runLater(() -> {
-            this.getWindow().setOnCloseRequest(event -> {
-                if (serverThread != null) {
-                    serverThread.interrupt();
-                }
-                if (clientThread != null) {
-                    clientThread.interrupt();
-                }
-
-            });
-        });
 
         // Add all elements to the root
         root.getChildren().add(background);
@@ -289,21 +197,13 @@ public class MainScene extends Scene {
         root.getChildren().add(pc);
         root.getChildren().add(otherpc);
         root.getChildren().add(wifi);
+        root.getChildren().add(orLabel);
 
         root.getChildren().add(receiverStack);
         root.getChildren().add(senderStack);
 
-        root.getChildren().add(communicationLogBackground);
-        root.getChildren().add(communicationLogTitleLabel);
-        root.getChildren().add(communicationLogLine);
-        root.getChildren().add(communicationLog);
-
         root.getChildren().add(ipLabel);
         root.getChildren().add(ipInput);
         root.getChildren().add(deviceIPLabel);
-
-        root.getChildren().add(messageBarBackground);
-        root.getChildren().add(messageBar);
-        root.getChildren().add(sendButton);
     }
 }
