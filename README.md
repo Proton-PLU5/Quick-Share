@@ -2,6 +2,11 @@
 
 A peer-to-peer quick share app.
 
+[![Contributors][contributors-shield]][contributors-url]
+[![Forks][forks-shield]][forks-url]
+[![Stargazers][stars-shield]][stars-url]
+[![Issues][issues-shield]][issues-url]
+
 ## Purpose
 
 Quick Share is a peer-to-peer file sharing app that allows users to share files with each other quickly and easily.
