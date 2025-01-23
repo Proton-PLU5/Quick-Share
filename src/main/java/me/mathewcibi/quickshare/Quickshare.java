@@ -5,7 +5,7 @@ import javafx.application.Platform;
 import javafx.scene.Group;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
-import me.mathewcibi.quickshare.scenes.SenderScene;
+import me.mathewcibi.quickshare.scenes.MainScene;
 import me.mathewcibi.quickshare.utils.CryptographyUtils;
 import me.mathewcibi.quickshare.utils.NetworkServer;
 
@@ -30,7 +30,7 @@ public class Quickshare extends Application {
 
     @Override
     public void start(Stage primaryStage) {
-        SenderScene mainScene = new SenderScene(new Group());
+        MainScene mainScene = new MainScene(new Group());
         primaryStage.setScene(mainScene);
         primaryStage.initStyle(StageStyle.DECORATED);
         primaryStage.setTitle("Quick Share");

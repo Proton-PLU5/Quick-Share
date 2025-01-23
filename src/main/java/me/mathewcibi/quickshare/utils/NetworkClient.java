@@ -66,8 +66,13 @@ public class NetworkClient extends Thread {
         }
     }
 
-    private void close() throws IOException {
-        clientSocket.close();
-        outputStream.close();
+    public void close() throws IOException {
+        running = false;
+        if (clientSocket != null && !clientSocket.isClosed()) {
+            clientSocket.close();
+        }
+        if (outputStream != null) {
+            outputStream.close();
+        }
     }
 }

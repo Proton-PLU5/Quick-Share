@@ -4,6 +4,7 @@ import javafx.application.Platform;
 import javafx.scene.control.TextArea;
 import javafx.stage.DirectoryChooser;
 import me.mathewcibi.quickshare.Quickshare;
+import me.mathewcibi.quickshare.scenes.MainScene;
 
 import java.io.*;
 import java.net.ServerSocket;
@@ -26,6 +27,13 @@ public class NetworkServer extends Thread {
 
     @Override
     public void run() {
+        while (running) {
+            startServer();
+        }
+
+    }
+
+    private void startServer() {
         try {
             System.out.println("Server starting...");
             serverSocket = new ServerSocket(PORT);
@@ -36,14 +44,24 @@ public class NetworkServer extends Thread {
     }
 
     private void initConnections() throws IOException {
-        Socket clientSocket = serverSocket.accept();
-        transferLogArea.setText(transferLogArea.getText() + "Connected to: " + clientSocket.getInetAddress().getHostAddress() + "\n");
-        inputStream = new DataInputStream(new BufferedInputStream(clientSocket.getInputStream()));
-        DataOutputStream outputStream = new DataOutputStream(clientSocket.getOutputStream());
-        outputStream.write(Quickshare.CRYPTOGRAPHY_UTILS.publicKey.getEncoded());
-        System.out.println("Public key sent.");
-        readInputStream();
-        closeConnections();
+        while (running) {
+            acceptConnections();
+            System.out.println("client disconnected");
+            ((MainScene) transferLogArea.getScene()).disconnectedFromReceiver();
+        }
+
+    }
+
+    private void acceptConnections() throws IOException {
+        while (running) {
+            Socket clientSocket = serverSocket.accept();
+            transferLogArea.setText(transferLogArea.getText() + "Connected to: " + clientSocket.getInetAddress().getHostAddress() + "\n");
+            inputStream = new DataInputStream(new BufferedInputStream(clientSocket.getInputStream()));
+            DataOutputStream outputStream = new DataOutputStream(clientSocket.getOutputStream());
+            outputStream.write(Quickshare.CRYPTOGRAPHY_UTILS.publicKey.getEncoded());
+            System.out.println("Public key sent.");
+            readInputStream(clientSocket);
+        }
     }
 
     private void closeConnections() throws IOException {
@@ -51,9 +69,9 @@ public class NetworkServer extends Thread {
         serverSocket.close();
     }
 
-    private void readInputStream() {
+    private void readInputStream(Socket clientSocket) {
         try {
-            while (running) {
+            while (running && !clientSocket.isClosed()) {
                 int keyLength = inputStream.readInt();
                 byte[] encryptedSymmetricKey = new byte[keyLength];
                 inputStream.readFully(encryptedSymmetricKey);
@@ -135,6 +153,12 @@ public class NetworkServer extends Thread {
             e.printStackTrace();
         } catch (Exception e) {
             throw new RuntimeException(e);
+        } finally {
+            try {
+                clientSocket.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 
