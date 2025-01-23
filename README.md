@@ -1,7 +1,5 @@
-
-
+![Quickshare Logo](https://github.com/Proton-PLU5/Quick-Share/blob/main/src/main/resources/me/mathewcibi/quickshare/quickshare_title_logo.png?raw=true "Quickshare Logo")
 # Quick Share
-
 A peer-to-peer quick share app.
 
 ## Purpose
