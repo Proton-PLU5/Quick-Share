@@ -1,11 +1,8 @@
+
+
 # Quick Share
 
 A peer-to-peer quick share app.
-
-[![Contributors][contributors-shield]][contributors-url]
-[![Forks][forks-shield]][forks-url]
-[![Stargazers][stars-shield]][stars-url]
-[![Issues][issues-shield]][issues-url]
 
 ## Purpose
 

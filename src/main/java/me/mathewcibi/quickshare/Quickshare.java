@@ -3,6 +3,7 @@ package me.mathewcibi.quickshare;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.scene.Group;
+import javafx.scene.image.Image;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import me.mathewcibi.quickshare.scenes.MainScene;
@@ -37,9 +38,10 @@ public class Quickshare extends Application {
         primaryStage.setResizable(false);
         primaryStage.show();
 
+        primaryStage.getIcons().add(new Image(this.getClass().getResource("/me/mathewcibi/quickshare/quickshare_logo.png").toExternalForm()));
+
         Platform.runLater(() -> {
-            mainScene.getWindow().setOnCloseRequest(event -> {
-                serverThread.running = false;
+            mainScene.getWindow().setOnCloseRequest(event -> {                serverThread.running = false;
                 serverThread.interrupt();
                 Platform.exit();
                 System.exit(0);
