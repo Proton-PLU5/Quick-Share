@@ -12,9 +12,10 @@ on:
         - info
         - warning
         - debug
-        
+
 permissions:
   contents: read
+  id-token: write
 
 jobs:
   build:
@@ -22,10 +23,10 @@ jobs:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
     runs-on: ${{ matrix.os }}
-    
+
     steps:
       - uses: actions/checkout@v3
-        
+
       - name: Set up JDK 23
         uses: actions/setup-java@v3
         with:
@@ -55,5 +56,25 @@ jobs:
         with:
           arguments: jpackage
 
-      - name: Download a Build Artifact
-        uses: actions/download-artifact@v4.1.8
+      - name: Upload jpackage outputs
+        uses: actions/upload-artifact@v3
+        with:
+          name: jpackage-output
+          path: path/to/jpackage/output
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          draft: false
+          prerelease: false
+
+      - name: Upload Release Asset
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: path/to/jpackage/output
+          asset_name: jpackage-output
+          asset_content_type: application/zip
