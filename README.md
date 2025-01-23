@@ -37,4 +37,4 @@ but also provides more security than cloud file transfer services.
 
 ## Technologies Used
 - Java
-- JavaFX 
+- JavaFX
