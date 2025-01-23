@@ -9,9 +9,9 @@ on:
         default: 'warning'
         type: choice
         options:
-        - info
-        - warning
-        - debug
+          - info
+          - warning
+          - debug
 
 permissions:
   contents: read
@@ -60,7 +60,10 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: jpackage-output
-          path: path/to/jpackage/output
+          path: |
+            build/jpackage/*.msi
+            build/jpackage/*.pkg
+            build/jpackage/*.deb
 
       - name: Create Release
         id: create_release
@@ -70,11 +73,16 @@ jobs:
           release_name: Release ${{ github.ref }}
           draft: false
           prerelease: false
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload Release Asset
         uses: actions/upload-release-asset@v1
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: path/to/jpackage/output
+          asset_path: |
+            build/jpackage/*.msi
+            build/jpackage/*.pkg
+            build/jpackage/*.deb
           asset_name: jpackage-output
-          asset_content_type: application/zip
+          asset_content_type: application/octet-stream
+          token: ${{ secrets.GITHUB_TOKEN }}
