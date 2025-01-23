@@ -1,6 +1,6 @@
 package me.mathewcibi.quickshare.scenes;
 
-import javafx.animation.AnimationTimer;
+import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.scene.Group;
 import javafx.scene.Scene;
@@ -21,6 +21,7 @@ import javafx.scene.shape.Line;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
 import javafx.scene.text.TextAlignment;
+import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import me.mathewcibi.quickshare.Quickshare;
@@ -30,10 +31,16 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.InetAddress;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 public class SenderScene extends Scene {
-    private Thread clientThread;
+    private NetworkClient clientThread;
     private String IP = "";
+    private TextArea transferLogTextArea;
 
     public SenderScene(Group root) {
         super(root);
@@ -183,18 +190,15 @@ public class SenderScene extends Scene {
         connectionStack.setLayoutY(432);
         connectionStack.setOnMouseClicked(event -> {
             System.out.println("Connect Button Clicked");
-            clientThread = new Thread(() -> {
-                try {
-                    System.out.println("Client Started with IP: " + IP);
-                    new NetworkClient(IP);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            });
+            try {
+                clientThread = new NetworkClient(IP);
+            } catch (IOException | InterruptedException e) {
+                throw new RuntimeException(e);
+            }
             clientThread.start();
             connectionButton.setFill(Color.web("004BC3"));
+            connectionLabel.setText("CONNECTED");
         });
-
 
         // Device IP
         String ip = "ERROR GETTING IP";
@@ -250,7 +254,7 @@ public class SenderScene extends Scene {
             );
             File file = fileChooser.showOpenDialog(this.getWindow());
             if (file != null) {
-                openFile(file);
+                openFile(file, false);
             }
         });
 
@@ -274,6 +278,12 @@ public class SenderScene extends Scene {
         folderButtonPane.setLayoutX(247);
         folderButtonPane.setLayoutY(554);
 
+        folderButtonPane.setOnMouseClicked(event -> {
+            System.out.println("File Button Clicked");
+
+            openDirectory();
+        });
+
         /// Transfer Log
         Label transferLogLabel = new Label("TRANSFER LOG");
         transferLogLabel.setTextFill(Color.web("D9D9D9"));
@@ -291,7 +301,7 @@ public class SenderScene extends Scene {
         transferLogBackground.setArcHeight(10);
         transferLogBackground.setArcWidth(10);
 
-        TextArea transferLogTextArea = new TextArea();
+        transferLogTextArea = new TextArea();
         transferLogTextArea.getStyleClass().add("textarea");
         transferLogTextArea.setLayoutX(391);
         transferLogTextArea.setLayoutY(592);
@@ -301,33 +311,44 @@ public class SenderScene extends Scene {
         transferLogTextArea.setStyle("-fx-text-fill: #FFFFFF;");
         transferLogTextArea.setEditable(false);
 
-        /// Transfer Progress Bar
-        Rectangle progressBarBackground = new Rectangle(414, 20, Color.web("D9D9D9"));
-        progressBarBackground.setLayoutX(391);
-        progressBarBackground.setLayoutY(702);
-        progressBarBackground.setArcHeight(15);
-        progressBarBackground.setArcWidth(15);
+//        /// Transfer Progress Bar
+//        Rectangle progressBarBackground = new Rectangle(414, 20, Color.web("D9D9D9"));
+//        progressBarBackground.setLayoutX(391);
+//        progressBarBackground.setLayoutY(702);
+//        progressBarBackground.setArcHeight(15);
+//        progressBarBackground.setArcWidth(15);
+//
+//        Rectangle progressBar = new Rectangle(0, 20, Color.web("0FB600"));
+//        progressBar.setLayoutX(391);
+//        progressBar.setLayoutY(702);
+//        progressBar.setArcHeight(15);
+//        progressBar.setArcWidth(15);
+//
+//        AnimationTimer progressBarAnimation = new AnimationTimer() {
+//            @Override
+//            public void handle(long now) {
+//                double fraction = (double) Quickshare.DATA_TO_SEND.size() / Quickshare.ITEMS_TO_SEND;
+//                int maxSize = 414;
+//                double progress = maxSize * fraction;
+//
+//                progressBar.setWidth(progress);
+//                if (progressBar.getWidth() >= 414) {
+//                    progressBar.setWidth(0);
+//                }
+//            }
+//        };
+//        progressBarAnimation.start();
 
-        Rectangle progressBar = new Rectangle(0, 20, Color.web("0FB600"));
-        progressBar.setLayoutX(391);
-        progressBar.setLayoutY(702);
-        progressBar.setArcHeight(15);
-        progressBar.setArcWidth(15);
-
-        AnimationTimer progressBarAnimation = new AnimationTimer() {
-            @Override
-            public void handle(long now) {
-                double fraction = (double) Quickshare.DATA_TO_SEND.size() / Quickshare.ITEMS_TO_SEND;
-                int maxSize = 414;
-                double progress = maxSize * fraction;
-
-                progressBar.setWidth(progress);
-                if (progressBar.getWidth() >= 414) {
-                    progressBar.setWidth(0);
+        // Add stopping mechanic
+        Platform.runLater(() -> {
+            this.getWindow().setOnCloseRequest(event -> {
+                if (clientThread != null) {
+                    clientThread.running = false;
+                    clientThread.interrupt();
                 }
-            }
-        };
-        progressBarAnimation.start();
+            });
+        });
+
 
         // Add all elements to the root
         root.getChildren().add(background);
@@ -371,16 +392,60 @@ public class SenderScene extends Scene {
         root.getChildren().add(transferLogLine);
         root.getChildren().add(transferLogTextArea);
 
-        root.getChildren().add(progressBarBackground);
-        root.getChildren().add(progressBar);
+//        root.getChildren().add(progressBarBackground);
+//        root.getChildren().add(progressBar);
     }
 
-    private void openFile(File file) {
+    private void openDirectory() {
+        DirectoryChooser directoryChooser = new DirectoryChooser();
+        directoryChooser.setTitle("Select a directory to send");
+        File selectedDirectory = directoryChooser.showDialog(this.getWindow());
+        transferLogTextArea.setText(transferLogTextArea.getText() + "Compressing directory: " + selectedDirectory.getName() + "\n");
+        // Compress directory to zip
+        Path zipPath = null;
+        try {
+            zipPath = Files.createFile(Paths.get(selectedDirectory.getAbsolutePath() + ".zip"));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        try (ZipOutputStream zs = new ZipOutputStream(Files.newOutputStream(zipPath))) {
+            Path pp = Paths.get(selectedDirectory.getAbsolutePath());
+            Files.walk(selectedDirectory.toPath())
+                    .filter(path -> !Files.isDirectory(path))
+                    .forEach(path -> {
+                            ZipEntry zipEntry = new ZipEntry(pp.relativize(path).toString());
+                            try {
+                                zs.putNextEntry(zipEntry);
+                                Files.copy(path, zs);
+                                zs.closeEntry();
+                            } catch (IOException e) {
+                                System.err.println(e);
+                            }
+                    });
+            transferLogTextArea.setText(transferLogTextArea.getText() + "Compressed directory: " + selectedDirectory.getName() + "\n");
+
+            // Send Zip
+            transferLogTextArea.setText(transferLogTextArea.getText() + "Sending directory: " + selectedDirectory.getName() + "\n");
+            openFile(zipPath.toFile(), true);
+            transferLogTextArea.setText(transferLogTextArea.getText() + "Sent directory: " + selectedDirectory.getName() + "\n");
+
+            // Delete Zip
+            Files.delete(zipPath);
+        } catch (IOException e) {
+            transferLogTextArea.setText(transferLogTextArea.getText() + "Error compressing directory: " + selectedDirectory.getName() + "\n");
+        }
+    }
+
+    private void openFile(File file, boolean isZip) {
         byte[] fileData = new byte[(int) file.length()];
         try (FileInputStream fileInputStream = new FileInputStream(file);) {
             fileInputStream.read(fileData);
+
+            byte[] isZipBytes = isZip ? "true".getBytes() : "false".getBytes();
+
             Quickshare.ITEMS_TO_SEND = 1;
             synchronized (Quickshare.DATA_TO_SEND) {
+                Quickshare.DATA_TO_SEND.add(isZipBytes);
                 Quickshare.DATA_TO_SEND.add(file.getName().getBytes());
                 Quickshare.DATA_TO_SEND.add(fileData);
                 Quickshare.DATA_TO_SEND.notifyAll();
@@ -389,5 +454,9 @@ public class SenderScene extends Scene {
             throw new RuntimeException(e);
         }
 
+    }
+
+    public TextArea getTransferLogArea() {
+        return transferLogTextArea;
     }
 }

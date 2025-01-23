@@ -1,26 +1,32 @@
 package me.mathewcibi.quickshare;
 
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.scene.Group;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import me.mathewcibi.quickshare.scenes.SenderScene;
+import me.mathewcibi.quickshare.utils.CryptographyUtils;
 import me.mathewcibi.quickshare.utils.NetworkServer;
 
+import java.security.NoSuchAlgorithmException;
 import java.util.LinkedList;
 import java.util.Queue;
 
 public class Quickshare extends Application {
     public static final Queue<byte[]> DATA_TO_SEND = new LinkedList<>();
-    public static int ITEMS_TO_SEND = 3;
-    public static final Thread serverThread = new Thread(() -> {
+    public static int ITEMS_TO_SEND = 0;
+    public static NetworkServer serverThread = null;
+    public static final CryptographyUtils CRYPTOGRAPHY_UTILS;
+
+    static {
         try {
-            System.out.println("Server Started");
-            new NetworkServer();
-        } catch (Exception e) {
-            e.printStackTrace();
+            CRYPTOGRAPHY_UTILS = new CryptographyUtils();
+            CRYPTOGRAPHY_UTILS.generateSymmetricKey();
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException(e);
         }
-    });
+    }
 
     @Override
     public void start(Stage primaryStage) {
@@ -30,6 +36,17 @@ public class Quickshare extends Application {
         primaryStage.setTitle("Quick Share");
         primaryStage.setResizable(false);
         primaryStage.show();
+
+        Platform.runLater(() -> {
+            mainScene.getWindow().setOnCloseRequest(event -> {
+                serverThread.running = false;
+                serverThread.interrupt();
+                Platform.exit();
+                System.exit(0);
+            });
+        });
+        
+        serverThread = new NetworkServer(mainScene.getTransferLogArea());
         serverThread.start();
     }
 
