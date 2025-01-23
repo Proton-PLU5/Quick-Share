@@ -2,7 +2,7 @@
 # Quick Share
 A peer-to-peer quick share app.
 
-## Purpose
+## 🎯 Purpose
 
 Quick Share is a peer-to-peer file sharing app that allows users to share files with each other quickly and easily.
 The purpose of this app is to allow users to share files with each other quickly and easily.
@@ -17,7 +17,7 @@ Quick Share provides a secure and fast way to share files with other users witho
 It accomplishes this by using LAN connections to transfer files between devices. This method is not only faster than bluetooth file transfer, 
 but also provides more security than cloud file transfer services.
 
-## Features
+## ➜ Features
 - Share files with other users on the same network
 - No need for internet connection
 - No need for cloud storage
@@ -27,7 +27,7 @@ but also provides more security than cloud file transfer services.
 - Fast file transfer speeds
 - Cross-platform compatibility (Windows, Mac, Linux)
 
-## How to Use
+## ➜ How to Use
 1. Download the app from the [releases page]()
 2. Install the app on your device using the provided installer
 3. Open the app and type in the IP address of the device you want to share files with
@@ -35,6 +35,6 @@ but also provides more security than cloud file transfer services.
 5. Select the files you want to share and press the "Send" button
 6. The files will be transferred to the other device securely and quickly
 
-## Technologies Used
+## ➜ Technologies Used
 - Java
 - JavaFX
