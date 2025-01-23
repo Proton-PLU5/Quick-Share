@@ -17,6 +17,8 @@ Quick Share provides a secure and fast way to share files with other users witho
 It accomplishes this by using LAN connections to transfer files between devices. This method is not only faster than bluetooth file transfer, 
 but also provides more security than cloud file transfer services.
 
+
+
 ## ➜ Features
 - Share files with other users on the same network
 - No need for internet connection
