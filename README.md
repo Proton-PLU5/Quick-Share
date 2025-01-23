@@ -37,6 +37,11 @@ but also provides more security than cloud file transfer services.
 5. Select the files you want to share and press the "Send" button
 6. The files will be transferred to the other device securely and quickly
 
+## Future
+- Add support for mobile devices
+- Separate backend and frontend (Use C for backend to reduce resource usage)
+- Add system tray icon for easy access
+
 ## ➜ Technologies Used
 - Java
 - JavaFX
